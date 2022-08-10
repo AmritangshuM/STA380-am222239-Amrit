@@ -1,0 +1,1021 @@
+---
+title: "ML Assignment 2"
+author: "Amritangshu Mukherjee - am222239"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  pdf_document: default
+always_allow_html: true
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+##### A link to a GitHub repo where the final report has been knitted and stored *in Markdown (.md) or PDF format*.
+
++----------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Type     | Link                                                                                                                                             |
++:=========+:=================================================================================================================================================+
+| RMD File | ##### <https://github.com/AmritangshuM/STA380-am222239-Amrit/blob/38224e2c69e72282a3a44e07551209248b1b2cfa/Final_Assignment_Amritangshu_mlV3.md> |
++----------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| MD File  | ##### <https://github.com/AmritangshuM/STA380-am222239-Amrit/blob/main/Final_Assignment_Amritangshu_mlV3.md>                                     |
++----------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| PDF File | ##### <https://github.com/AmritangshuM/STA380-am222239-Amrit/blob/main/Final_Assignment_Amritangshu_mlV3.md>                                     |
++----------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 1 - Probability practice
+
+## Answer Part A -
+
+p(users_yes)=0.65
+
+p(users_no)=0.35
+
+p(random_clicker)=0.3
+
+p(fraction of random clickers yes)=0.5
+
+p(truthfull_clicker)=0.7
+
+p(fraction of truth clickers yes)=0.5
+
+##### Fraction of people who are truthful clickers answered yes=\>
+
+p(users_yes)=p(truthfull_clicker) \* p(fraction of people who are truthful clickers answered yes) + p(random_clicker) \* p(fraction of random clickers yes)
+
+Assume p(truthfull_clicker) as a variable -\> x
+
+0.65=0.7\*x+0.3\*0.5
+
+x=0.714
+
+**Answer :** So the fraction of fraction of people who are truthful clickers answered yes are 0.714
+
+## Answer Part B -
+
+p(positive_test/disease)=0.993
+
+p(test negative/no disease) = 0.9999
+
+p(disease)=0.000025
+
+p(disease/test_positive)=p(disease)\*p(test_positive/disease)/p(test_positive)
+
+p(disease/test_positive)=p(disease)*p(test_positive/disease)/(*p(disease)*p(test_positive/disease)*+*p(no_disease)*\*p(test_positive/no disease))
+
+p(disease/test_positive)=0.000025\*0.993/(0.000025\*0.993+(1-0.000025)(1-0.9999))
+
+p(disease/test_positive)=0.1989
+
+**Answer :** Suppose someone tests positive probability that they have the disease 0.1989
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 2 - **Wrangling the Billboard Top 100**
+
+## Answer Part A -
+
+```{r Answer 2(a) , echo = FALSE}
+
+library(dplyr)
+library(tidyverse)
+data1 <- read.csv("billboard.csv")
+data2<-data1[,c("performer","song","year","week","week_position")]
+
+data3<-data2%>%group_by(performer,song)%>%summarize(count = n())%>%arrange(desc(count)) 
+print('The sorted dataframe is below for top 10 most popular songs since 1958, as measured by the total number of weeks that a song spent on the Billboard')
+#head(data3,n=10)
+
+library(knitr)
+kable(head(data3,n=10))
+```
+
+## Answer Part B -
+
+```{r Answer 2(b), echo = FALSE}
+
+data4<-unique(data2[,c("year","song")])
+data5<-data4%>%group_by(year)%>%summarize(count = n())
+
+data5<-data5 %>% filter(year !=1958 & year !=2021)
+print('Plotting the measure of musical diversity over the years')
+plot(data5)
+```
+
+## Answer Part C -
+
+```{r Answer 2(c), echo = FALSE}
+
+data6<-unique(data2[,c("performer","song","week")])
+data7<-data6%>%group_by(performer,song)%>%summarize(count = n())
+
+data8<-data7%>% filter(count >=10)
+data9<-unique(data8[,c("performer","song")])
+data10<-data9%>%group_by(performer)%>%summarize(count = n())
+data11<-data10%>% filter(count >30)
+
+print('Performer Counts with most 10 week hits in the billboard top 100.')
+
+ggplot(data11) + 
+  geom_col(aes(x=performer, y=count)) +coord_flip()+
+  labs(subtitle="Performer Counts with most 10 week hits in the billboard top 100")
+
+print('Elton John seems to have the most 10 week hits in the billboard top 100.')
+
+```
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 3 - **Visual story telling part 1: green buildings**
+
+## Answer 3-
+
+```{r Answer 3(a), echo = FALSE}
+
+library(corrplot)
+library(mosaic)
+library(tidyverse)
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+data_load <- read.csv('greenbuildings.csv')
+library(DataExplorer)
+
+print('Lets check if we have any missing values')
+plot_intro(data_load)
+
+numeric_columns<- dplyr::select_if(data_load, is.numeric)
+print('Lets look at the distribution of the data')
+plot_histogram(numeric_columns)
+print('Lets look at the correltion between these variables')
+plot_correlation(na.omit(data_load), maxcat = 5L)
+print('Lets look at the pairwise correltion between these variables')
+GGally::ggpairs(data_load, 
+                columns = c('cluster_rent', "class_a", "Rent", 'Gas_Costs', 'green_rating'))
+
+print('Lets look at the mean and median rent in the data')
+
+hist(data_load$Rent)
+abline(v = median(data_load$Rent), col = "blue", lwd = 3)
+abline(v = mean(data_load$Rent), col = "red", lwd = 3)
+
+print('Lets look at the distribution of these features across various metrics')
+p5<-ggplot(data=data_load) + 
+  geom_point(mapping=aes(x=cluster_rent, y=Rent))+
+  labs(title="Measuring cluster rent vs rent")
+
+p6<-ggplot(data=data_load) + 
+  geom_point(mapping=aes(x=age, y=Rent))+
+  labs(title="Measuring age vs rent")
+
+p3<-ggplot(data=data_load) + 
+  geom_point(mapping=aes(x=size, y=Rent))+
+  labs(title="Measuring size vs rent")
+
+p4<-ggplot(data=data_load) + 
+  geom_point(mapping=aes(x=stories, y=Rent))+
+  labs(title="Measuring stories vs rent")
+
+grid.arrange(p5, p6,p3,p4, nrow = 2)
+
+print('we observed that Rent is correlated with the cluster rent, size, class A. Additionally, Class a buildings get higher rent')
+
+library(ggplot2)
+print('Lets look at the impact of Class A buildings on rent of green rated houses')
+p1<-ggplot(data_load,aes(x= Rent, fill=factor(green_rating)))+geom_histogram(bins = 50)+ 
+  facet_wrap(~class_a)+
+  labs(subtitle="Measuring rent with green rating")
+p2<-ggplot(data_load,aes(x= cluster_rent, fill=factor(green_rating)))+geom_histogram(bins = 50)+ 
+  facet_wrap(~class_a)+
+  labs(subtitle="Measuring cluster rent with green rating")
+grid.arrange(p1, p2, nrow = 2)
+
+print('we can observe that the class A buildings have better rent if they are green rated here')
+
+print('Lets look at the consumption of resources for green buildings')
+p5<-ggplot(data_load,aes(x= size, fill=factor(green_rating)))+geom_histogram(bins = 50)+
+  labs(subtitle="Measuring size of building with green rating")
+p6<-ggplot(data_load,aes(x= stories, fill=factor(green_rating)))+geom_histogram(bins = 50)+
+  labs(subtitle="Measuring number of stories with green rating")
+p3<-ggplot(data_load,aes(x= Gas_Costs, fill=factor(green_rating)))+geom_histogram(bins = 50)+
+  labs(subtitle="Measuring gas cost with green rating")
+p4<-ggplot(data_load,aes(x= Electricity_Costs, fill=factor(green_rating)))+geom_histogram(bins = 50)+
+  labs(subtitle="Measuring Electricity use of building with green rating")
+grid.arrange(p5, p6,p3,p4, nrow = 4)
+
+print('Lets look at the density of green rated houses with various metrics')
+ggplot(data_load, aes(class_a, ..count..)) + geom_bar(aes(fill = green_rating))
+
+g = ggplot(data_load, aes(x=age))
+g + geom_density(aes(fill=factor(green_rating)))+
+  labs(title="Measuring age with green rating vs without")
+
+g = ggplot(data_load, aes(x=size))
+g + geom_density(aes(fill=factor(green_rating)))+
+  labs(title="Measuring size with green rating vs without")
+
+g = ggplot(data_load, aes(x=cluster_rent))
+g + geom_density(aes(fill=factor(green_rating)))+
+  labs(title="Measuring cluster_rent with green rating vs without")
+
+g = ggplot(data_load, aes(x=Rent))
+g + geom_density(aes(fill=factor(green_rating)))+
+  labs(title="Measuring rent with green rating vs without")
+```
+
+We observed most of the green buildings are younger than non-green buildings and the proportion of class a buildings is higher in green buildings
+
+Since Stats Guru fails to account for all factors that affect rent, his analysis is wrong In order to calculate the returns, he began by using the median rent for all buildings.Because of this, he fails to factor in other factors, such as the size and class of the buildings,into his analysis. For instance, we have a class A building will yield a higher rent than a non-green building.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 4 - **Visual story telling part 2: Capital Metro data**
+
+## Answer 4 -
+
+To figure out interesting Capital Metro ridership patterns around the UT-Austin we started with loading the data and then looking at various aspects of the same. We focused on weekly, monthly ridership and also the riding trends during the day.
+
+```{r Answer 4(a), echo = FALSE}
+
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+capmetro <- read.csv("capmetro_UT.csv")
+
+library(DataExplorer)
+print('Lets check if we have any missing values')
+plot_intro(capmetro)
+
+numeric_columns<- dplyr::select_if(capmetro, is.numeric)
+print('We can now plot the distribution of this data')
+plot_histogram(numeric_columns)
+
+print('lets look at the hourly trend of ridership')
+daily_rides = capmetro %>%group_by(hour_of_day) %>%summarize(riders = mean(boarding))
+
+daily_rides_2 = capmetro %>%group_by(hour_of_day) %>%summarize(riders = mean(alighting))
+
+p1=ggplot(daily_rides) + geom_line(aes(x=hour_of_day, y=riders))+ ggtitle("Number of people boarding")
+p2=ggplot(daily_rides_2) + geom_line(aes(x=hour_of_day, y=riders))+ ggtitle("Number of people alighting")
+grid.arrange(p1, p2, nrow = 1)
+
+print('Lets look at the weekly trend of ridership')
+daily_rides_3 = capmetro %>%group_by(hour_of_day,day_of_week) %>%summarize(riders = mean(boarding))
+
+ggplot(daily_rides_3) + 
+  geom_point(aes(x=hour_of_day, y=riders)) + 
+  facet_wrap(~day_of_week) +
+  labs(x="hour of the day",
+       y="Number of riders",
+       title="Number of riders by day across days of week")
+
+print('lets look at the monthly trend of ridership')
+daily_rides_4 = capmetro %>%group_by(day_of_week,month) %>%summarize(riders = mean(boarding))
+
+ggplot(daily_rides_4) + 
+  geom_point(aes(x=day_of_week, y=riders)) + 
+  facet_wrap(~month) +
+  labs(x="Day of the Week",
+       y="Number of riders",
+       title="Number of riders by day across months")
+
+daily_rides_5 = capmetro %>%group_by(day_of_week,hour_of_day) %>%summarize(temperature = mean(temperature))
+
+ggplot(daily_rides_5) + 
+  geom_line(aes(x=hour_of_day, y=temperature))+ ggtitle("Temperature trends throughout the week") +
+  facet_wrap(~day_of_week)
+
+daily_rides_6 = capmetro %>%group_by(day_of_week,hour_of_day,month) %>%summarize(temperature = mean(temperature))
+
+ggplot(daily_rides_6) + 
+  geom_line(aes(x=day_of_week, y=temperature))+ ggtitle("Temperature range across months") +
+  facet_wrap(~month)
+
+```
+
+We looked at the daily, weekly and monthly distributions of the data and saw interesting trends like more people leave the bus during the early part of the day and interestingly the temperature of day can also be measure from this data. We also looked at monthly trends in ridership across the months of Oct, Sep and Nov. We also looked at temperature trends and ridership throughout the week.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 5 - **Portfolio modeling**
+
+## Answer 5 -
+
+### Portfolio 1 - 10 ETFs Balanced
+
+We will consider the following portfolio for this case :
+
++---------+---------+-------------------------------------------------+
+| S.No    | ETF     | Definition                                      |
++=========+=========+=================================================+
+| 1       | WMT     | Walmart                                         |
++---------+---------+-------------------------------------------------+
+| 2       | TGT     | Target                                          |
++---------+---------+-------------------------------------------------+
+| 3       | XOM     | Exxon Mobil                                     |
++---------+---------+-------------------------------------------------+
+| 4       | MRK     | Merck                                           |
++---------+---------+-------------------------------------------------+
+| 5       | IDV     | iShares International Select Dividend ETF       |
++---------+---------+-------------------------------------------------+
+| 6       | SPY     | SPDR S&P 500 ETF Trust                          |
++---------+---------+-------------------------------------------------+
+| 7       | VTI     | Vanguard                                        |
++---------+---------+-------------------------------------------------+
+| 8       | DIA     | Dow Jones Industrial                            |
++---------+---------+-------------------------------------------------+
+| 9       | JNJ     | Johnson and Johnson                             |
++---------+---------+-------------------------------------------------+
+| 10      | URTY    | Ultra share pro                                 |
++---------+---------+-------------------------------------------------+
+
+: PORTFOLIO 1
+
+```{r Answer 5(a), echo = FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+#----------------------Portfolio 1----------------------------------------------
+mystocks = c("WMT", "TGT", "XOM", "URTY", "JNJ","MRK", "IDV", "SPY", "VTI", "DIA")
+myprices = getSymbols(mystocks, from = "2015-01-01")
+
+print(mystocks)
+for(ticker in mystocks) {
+  expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+  eval(parse(text=expr))
+}
+
+print('Combine all the returns in a matrix')
+all_returns = cbind(	ClCl(WMTa),
+                     ClCl(TGTa),
+                     ClCl(XOMa),
+                     ClCl(MRKa),
+                     ClCl(JNJa),ClCl(MRKa),ClCl(IDVa),ClCl(SPYa),
+                     ClCl(VTIa),ClCl(DIAa))
+
+all_returns = as.matrix(na.omit(all_returns))
+
+# Compute the returns from the closing prices
+#pairs(all_returns)
+
+# Now loop over 4 trading weeks
+
+## begin block
+
+total_wealth = 100000
+weights = c(0.1,0.1,0.1, 0.1, 0.1,0.1,0.1,0.1, 0.1, 0.1)
+holdings = weights * total_wealth
+n_days = 20  # capital T in the notes
+wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+for(today in 1:n_days) {
+  return.today = resample(all_returns, 1, orig.ids=FALSE)  # sampling from R matrix in notes
+  holdings = holdings + holdings*return.today
+  total_wealth = sum(holdings)
+  wealthtracker[today] = total_wealth
+}
+total_wealth
+print('Total wealth through 20 days')
+plot(wealthtracker, type='l')
+## end block
+
+
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+sim1 = foreach(i=1:20, .combine='rbind') %do% {
+  total_wealth = initial_wealth
+  weights = c(0.1,0.1,0.1, 0.1, 0.1,0.1,0.1,0.1, 0.1, 0.1)
+  holdings = weights * total_wealth
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  for(today in 1:n_days) {
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    total_wealth = sum(holdings)
+    wealthtracker[today] = total_wealth
+  }
+  wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+print('Total wealth through simulate many different possible futures')
+hist(sim1[,n_days], 25,main="Histogram for Total wealth (simulation)",xlab="Total Wealth simulated")
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+print('Mean profit Loss')
+hist(sim1[,n_days]- initial_wealth, breaks=30,main="Histogram for Profit/Loss (simulation-initial wealth)",xlab="Profit/Loss" )
+
+# 5% value at risk:
+print('5% value at risk')
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+```
+
+This first portfolio performs well and this time with a -ve VAR value but a lower profit margin overall compared to our next portfolio. This is potentially due to the high number of stocks which can cause our profits to average out over the stocks that we have.
+
+Let's test out this theory by using a lower total number of stocks in our portfolio and try to measure the profit and VAR value.
+
+### Portfolio 2 - 5 ETFs Risky and balanced
+
+We will consider the following portfolio for this case :
+
++---------+---------+-------------------------------------------------+
+| S.No    | ETF     | Definition                                      |
++=========+=========+=================================================+
+| 1       | MRK     | Merck                                           |
++---------+---------+-------------------------------------------------+
+| 2       | IDV     | iShares International Select Dividend ETF       |
++---------+---------+-------------------------------------------------+
+| 3       | SPY     | SPDR S&P 500 ETF Trust                          |
++---------+---------+-------------------------------------------------+
+| 4       | VTI     | Vanguard                                        |
++---------+---------+-------------------------------------------------+
+| 5       | DIA     | Dow Jones Industrial                            |
++---------+---------+-------------------------------------------------+
+
+: PORTFOLIO 2
+
+```{r Answer 5(b), echo = FALSE}
+
+#----------------------Portfolio 2----------------------------------------------
+mystocks = c("MRK", "IDV", "SPY", "VTI", "DIA")
+myprices = getSymbols(mystocks, from = "2015-01-01")
+print(mystocks)
+for(ticker in mystocks) {
+  expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+  eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(	ClCl(MRKa),ClCl(IDVa),ClCl(SPYa),
+                     ClCl(VTIa),ClCl(DIAa))
+#head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+# Compute the returns from the closing prices
+#pairs(all_returns)
+
+# Now loop over 4 trading weeks
+
+## begin block
+total_wealth = 100000
+weights = c(0.2,0.2,0.2, 0.2, 0.2)
+holdings = weights * total_wealth
+n_days = 20  # capital T in the notes
+wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+for(today in 1:n_days) {
+  return.today = resample(all_returns, 1, orig.ids=FALSE)  # sampling from R matrix in notes
+  holdings = holdings + holdings*return.today
+  total_wealth = sum(holdings)
+  wealthtracker[today] = total_wealth
+}
+total_wealth
+print('Total wealth through 20 days')
+plot(wealthtracker, type='l')
+## end block
+
+
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+sim1 = foreach(i=1:20, .combine='rbind') %do% {
+  total_wealth = initial_wealth
+  weights = c(0.2,0.2,0.2, 0.2, 0.2)
+  holdings = weights * total_wealth
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  for(today in 1:n_days) {
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    total_wealth = sum(holdings)
+    wealthtracker[today] = total_wealth
+  }
+  wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+# each column is a data
+print('Total wealth through simulate many different possible futures')
+hist(sim1[,n_days], 25,main="Histogram for Total wealth (simulation)",xlab="Total Wealth simulated")
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+print('Mean profit Loss')
+hist(sim1[,n_days]- initial_wealth, breaks=30,main="Histogram for Profit/Loss (simulation-initial wealth)",xlab="Profit/Loss" )
+
+# 5% value at risk:
+print('5% value at risk')
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+```
+
+This second portfolio performs worse than portfolio 1 with a lower profit margin overall. This means that it was not helpful to have a lower number of total stocks in the portfolio and as a result assign higher weights to individual stocks in the portfolio.
+
+### Portfolio 3 - Smallcap- Very Risky
+
+Leveraged U.S. Size Factor TR ,VTI:Vanguard We will consider the following portfolio for this case :
+
++---------+---------+-------------------------------------------------+
+| S.No    | ETF     | Definition                                      |
++=========+=========+=================================================+
+| 1       | TNA     | Direxion Daily Small Cap Bull 3x                |
++---------+---------+-------------------------------------------------+
+| 2       | URTY    | ProShares UltraPro                              |
++---------+---------+-------------------------------------------------+
+| 3       | UWM     | ProShares Ultra                                 |
++---------+---------+-------------------------------------------------+
+| 4       | VTI     | Vanguard                                        |
++---------+---------+-------------------------------------------------+
+| 5       | IWML    | ETRACS 2x Leveraged U.S. Size Factor TR         |
++---------+---------+-------------------------------------------------+
+
+: PORTFOLIO 3
+
+```{r Answer 5(c), echo = FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+#----------------------Portfolio 3----------------------------------------------
+mystocks = c("TNA", "URTY", "UWM", "IWML","VTI")
+myprices = getSymbols(mystocks, from = "2015-01-01")
+print(mystocks)
+for(ticker in mystocks) {
+  expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+  eval(parse(text=expr))
+}
+
+# Combine all the returns in a matrix
+all_returns = cbind(	ClCl(TNA),
+                     ClCl(URTY),ClCl(UWM),ClCl(IWML),ClCl(VTI))
+#head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+# Compute the returns from the closing prices
+#pairs(all_returns)
+
+# Now loop over 4 trading weeks
+
+## begin block
+total_wealth = 100000
+weights = c(0.2,0.2,0.2, 0.2,0.2)
+holdings = weights * total_wealth
+n_days = 20  # capital T in the notes
+wealthtracker = rep(0, n_days) # Set up a placeholder to track total wealth
+for(today in 1:n_days) {
+  return.today = resample(all_returns, 1, orig.ids=FALSE)  # sampling from R matrix in notes
+  holdings = holdings + holdings*return.today
+  total_wealth = sum(holdings)
+  wealthtracker[today] = total_wealth
+}
+total_wealth
+print('Total wealth through 20 days')
+plot(wealthtracker, type='l')
+## end block
+
+
+# Now simulate many different possible futures
+# just repeating the above block thousands of times
+initial_wealth = 100000
+sim1 = foreach(i=1:20, .combine='rbind') %do% {
+  total_wealth = initial_wealth
+  weights = c(0.2,0.2,0.2, 0.2, 0.2)
+  holdings = weights * total_wealth
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  for(today in 1:n_days) {
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings + holdings*return.today
+    total_wealth = sum(holdings)
+    wealthtracker[today] = total_wealth
+  }
+  wealthtracker
+}
+
+# each row is a simulated trajectory
+# each column is a data
+print('Total wealth through simulate many different possible futures')
+hist(sim1[,n_days], 25,main="Histogram for Total wealth (simulation)",xlab="Total Wealth simulated")
+
+# Profit/loss
+mean(sim1[,n_days])
+mean(sim1[,n_days] - initial_wealth)
+print('Mean profit Loss')
+hist(sim1[,n_days]- initial_wealth, breaks=30,main="Histogram for Profit/Loss (simulation-initial wealth)",xlab="Profit/Loss" )
+
+# 5% value at risk:
+print('5% value at risk')
+quantile(sim1[,n_days]- initial_wealth, prob=0.05)
+```
+
+This third portfolio performs better than portfolio 2 with a higher profit margin overall. This means that it was helpful to have a risky set of stocks in the portfolio and as a result assign higher weights to individual stocks in the portfolio.Also this gives us a high VAR which makes sense as the portfolio was very risky.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 6 - **Clustering and PCA**
+
+## Answer 6 -
+
+Let us start with analysing the data and performing a PCA analysis with 2 principal components here.
+
+```{r Answer 6(a), echo = FALSE}
+wine <- read.csv("wine.csv")
+
+library(DataExplorer)
+
+plot_intro(wine)
+
+numeric_columns<- dplyr::select_if(wine, is.numeric)
+plot_histogram(numeric_columns)
+
+wine$Good_Quality_Wine<-ifelse(wine$quality>5,"Good Quality Wine","Bad Quality Wine")
+dim(wine)
+winePCA = prcomp(wine[,1:12], scale. = TRUE, rank=2)
+summary(winePCA)
+loadings = winePCA$rotation
+scores = winePCA$x
+
+p1<-qplot(scores[,1], scores[,2], color=wine$color, xlab='Component 1', ylab='Component 2')
+p2<-qplot(scores[,1], scores[,2], color=wine$Good_Quality_Wine, xlab='Component 1', ylab='Component 2')
+grid.arrange(p1, p2, nrow = 2)
+
+o2 = order(loadings[,2], decreasing=TRUE)
+colnames(wine)[head(o2,25)]
+colnames(wine)[tail(o2,25)]
+
+loadings_summary = winePCA$rotation %>%
+  as.data.frame() %>%
+  rownames_to_column('metric')
+loadings_summary
+
+```
+
+So we have observed above that the PCA analysis does produce separation of the wine based on red and white wine type and also produces a separation for quality of wine as well using only the "unsupervised" information contained in the data on chemical properties. Our unsupervised technique also seem capable of distinguishing the higher from the lower quality wines. The differences in the labels (red/white and quality score) emerge naturally from applying an unsupervised technique to the chemical properties.
+
+Now, lets look at this from a clustering perspective and try to create simple 2 clusters from this dataset.
+
+```{r Answer 6(b), echo = FALSE}
+
+#kmeans--------
+wine$Good_Quality_Wine_col<-ifelse(wine$quality>5,"blue","red")
+wine$red_white_col<-ifelse(wine$color=="red","red","blue")
+
+X = wine[,1:12]
+X = scale(X, center=TRUE, scale=TRUE)
+
+mu = attr(X,"scaled:center")
+sigma = attr(X,"scaled:scale")
+
+# Run k-means with 6 clusters and 25 starts
+clust1 = kmeans(X, 2, nstart=25)
+
+# What are the clusters?
+clust1$center
+
+library(cluster)
+library(fpc)
+library(ppclust)
+clusplot(X, clust1$cluster, color=TRUE, shade=TRUE,plotchar=TRUE, col.p=wine$red_white_col)
+clusplot(X, clust1$cluster, color=TRUE, shade=TRUE,plotchar=TRUE, col.p=wine$Good_Quality_Wine_col)
+```
+
+We can observe that clustering also created distinct separation between the quality of wines and the wine color. We would still prefer to use the clustering output as the separation is more pure there, Additionally, what we can do here is take the output of the clustering model and then run it through a PCA analysis to get better outcomes here.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 7 - **Market segmentation**
+
+## Answer 7 -
+
+We start to look at the potential market segmentation by loading the data, we will try to segment this data through PCA and K Means clustering in this case.
+
+```{r Answer 7(a), echo = FALSE}
+social_dt <- read.csv("social_marketing.csv")
+
+
+print('Filter dataset on spam and Adult flags')
+social_dt<-social_dt %>% filter(spam ==0 & adult ==0)
+library(DataExplorer)
+
+print('Plotting the missing values and categorical columns')
+plot_intro(social_dt)
+
+
+numeric_columns<- dplyr::select_if(social_dt, is.numeric)
+print('Plotting the distribution of variables')
+plot_histogram(numeric_columns)
+print('Plotting the correlation of items')
+plot_correlation(na.omit(numeric_columns), maxcat = 5L)
+GGally::ggpairs(social_dt, 
+                columns = c('shopping', "travel", "politics", 'food', 'family'))
+
+print('It seems that tv_films is correlated with school, beauty and art, lets try to build a PCA model on top of it')
+pca_df <- na.omit(social_dt[, c('shopping', "travel", "politics", 'food','school','beauty','art','school', 'family')])
+
+print('Performaing a PCA analysis to understand the composition')
+plot_prcomp(pca_df, variance_cap = 0.9, nrow = 2L, ncol = 2L,title='PCA analysis of the components')
+
+
+print('Lets try to cluster the most correlated variables of this data using Kmeans clustering')
+numeric_columns<- dplyr::select_if(social_dt, is.numeric)
+X = numeric_columns[c("politics","travel","school","beauty","art")]
+X = scale(X, center=TRUE, scale=TRUE)
+
+mu = attr(X,"scaled:center")
+sigma = attr(X,"scaled:scale")
+
+# Run k-means with 6 clusters and 25 starts
+clust1 = kmeans(X, 4, nstart=25)
+
+# What are the clusters
+clust1$center  # not super helpful
+
+library(cluster)
+library(fpc)
+library(ppclust)
+print('Lets look at the clusters for this set')
+clusplot(X, clust1$cluster, color=TRUE, shade=TRUE,plotchar=TRUE,main='Plotting the clusters from Kmeans model')
+
+
+print('Now lets try to combine PCA with Clustering for the most correlated variables')
+
+library(ggfortify)
+fit <- kmeans(X, 3, iter.max=1000) 
+
+social_dt$segment<-fit$cluster
+
+pca <- prcomp(X)  #principle component analysis
+pca_data <- mutate(fortify(pca), col=fit$cluster) 
+print('We want to examine the cluster memberships for each #observation')
+
+ggplot(pca_data) +  geom_point(aes(x=PC1, y=PC2, fill=factor(col)), 
+                              size=3, col="#7f7f7f", shape=21) + theme_bw(base_family="Helvetica")
+
+print('Number of members in each cluster')
+barplot(table(fit$cluster), col="#336699")
+print('Plotting the cluster')
+autoplot(fit, data=X, frame=TRUE, frame.type='norm')
+
+print('The Final Market segments')
+plot_prcomp(X, variance_cap = 0.9, nrow = 2L, ncol = 2L,title='Final market segements')
+```
+
+We observed that using PCA in combination with Kmeans clustering gave us the best separation for components, we can use these market segments as our final set.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 8 - **The Reuters corpus**
+
+## Answer 8 -
+
+-   **Question:** What are the most frequently used words across the entire dataset and are they the same words which are used in the most number of documents?
+
+-   **Approach:** We used the DocumentTermMatrix to calculate the frequencies of word across the entire dataset across authors and we used the inverse document frequency to calculate the usage of these words across documents and plotted these on word cloud to understand the same.
+
+```{r Answer 8(a), echo = FALSE}
+
+library(tm) 
+library(tidyverse)
+library(slam)
+library(proxy)
+readerPlain = function(fname){
+  readPlain(elem=list(content=readLines(fname)), 
+            id=fname, language='en') }
+
+
+print('load data for all authors')
+file_list = Sys.glob('ReutersC50/C50train/*/*.txt')
+author = lapply(file_list, readerPlain) 
+
+mynames = file_list %>%
+  { strsplit(., '/', fixed=TRUE) } %>%
+  { lapply(., tail, n=2) } %>%
+  { lapply(., paste0, collapse = '') } %>%
+  unlist
+
+names(author) = mynames
+
+#list authors
+main_dir <- "ReutersC50/C50train/"
+
+print ("list of directory names/Authors")
+dir_list <- list.dirs(main_dir,full.names = FALSE, 
+                      recursive = FALSE) 
+#print (dir_list)
+#with_author_names = data.frame(cbind(dir_list), stringsAsFactors = FALSE)
+
+## once you have documents in a vector, you 
+## create a text mining 'corpus' with: 
+library("corpus")
+documents_raw = Corpus(VectorSource(author))
+
+## Some pre-processing/tokenization steps.
+## tm_map just maps some function to every document in the corpus
+my_documents = documents_raw
+my_documents = tm_map(my_documents, content_transformer(tolower)) # make everything lowercase
+my_documents = tm_map(my_documents, content_transformer(removeNumbers)) # remove numbers
+my_documents = tm_map(my_documents, content_transformer(removePunctuation)) # remove punctuation
+my_documents = tm_map(my_documents, content_transformer(stripWhitespace)) ## remove excess white-space
+
+## Remove stopwords.  Always be careful with this!
+my_documents = tm_map(my_documents, content_transformer(removeWords), stopwords("en"))
+
+## create a doc-term-matrix
+DTM_author = DocumentTermMatrix(my_documents)
+class(DTM_author)  # a special kind of sparse matrix format
+## You can inspect its entries...
+DTM_author = removeSparseTerms(DTM_author, 0.95)
+
+library(data.table) 
+#find frequent terms
+colS <- colSums(as.matrix(DTM_author))
+length(colS)
+doc_features <- data.table(name = attributes(colS)$names, count = colS)
+
+print('most frequent and least frequent words across the entire dataset')
+doc_features[order(-count)][1:10] #top 10 most frequent words
+doc_features[order(count)][1:10] #least 10 frequent words
+
+library(ggplot2)
+library(ggthemes)
+
+ggplot(doc_features[count>5000],aes(name, count))+
+  geom_bar(stat = "identity",fill='lightblue',color='black')+
+  labs(title="Most common words with freq greater than 5000 in entire dataset")
+
+#create wordcloud
+print('Word cloud of words with min frequency of 1000 in entire dataset')
+library(wordcloud)
+wordcloud(names(colS), colS, min.freq = 1000, scale = c(6,.1), colors = brewer.pal(6, 'Dark2'))
+
+# construct TF IDF weights
+tfidf_author = weightTfIdf(DTM_author)
+
+colS <- colSums(as.matrix(tfidf_author))
+length(colS)
+doc_features2 <- data.table(name = attributes(colS)$names, count = colS)
+
+print('most frequent and least frequent words by number of documents')
+doc_features2[order(-count)][1:10] #top 10 most frequent words
+doc_features2[order(count)][1:10] #least 10 frequent words
+
+ggplot(doc_features2[count>19],aes(name, count))+
+  geom_bar(stat = "identity",fill='lightblue',color='black')+
+  labs(title="Most common words with freq greater than 19 in individual document")
+
+print('Word cloud of words with min frequency of 15 in individual dataset')
+#create wordcloud
+library(wordcloud)
+wordcloud(names(colS), colS, min.freq = 15, scale = c(6,.1), colors = brewer.pal(6, 'Dark2'))
+
+```
+
+-   **Results:** The word clouds have been generated and we can see that these are not the same, which means that the words which have the highest frequency are not he ones which have been used in most number of documents.
+
+-   **Conclusion:** We can conclude that the data distribution is such that some words are used much more frequently within certain documents here.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+## Question 9 - **Association rule mining**
+
+## Answer 9 -
+
+To calculate the association rules for grocery in the data we start with manipulation of the data to get it into the correct format for association rule mining.
+
+```{r Answer 9(a), echo = FALSE}
+
+library(tidyverse)
+library(igraph)
+library(arules)  # has a big ecosystem of packages built around it
+library(arulesViz)
+
+# Association rule mining
+# Adapted from code by Matt Taddy
+
+# Read in playlists from users
+# This is in "long" format -- every row is a single artist-listener pair
+df = read.table("groceries.txt", header = FALSE, sep = ",", 
+                col.names = paste0("V",seq_len(7)), fill = TRUE)
+df$ID <- seq.int(nrow(df))
+
+df2<-cbind(id=df[ , 8]  , stack(df[1:7]))
+
+df1_complete <- na.omit(subset(df2, select = -c(ind) )) 
+df2_complete <- df1_complete[-which(df1_complete$values == ""), ]
+
+
+library(DataExplorer)
+
+print('Plotting the missing values and categorical columns')
+plot_intro(df2_complete)
+summary(df2_complete)
+
+# Turn user into a factor
+df2_complete$id = factor(df2_complete$id)
+
+# First create a list of baskets: vectors of items by consumer
+baskets = split(x=df2_complete$values, f=df2_complete$id)
+
+## Remove duplicates ("de-dupe")
+baskets = lapply(baskets, unique)
+
+## Cast this variable as a special arules "transactions" class.
+basketstrans = as(baskets, "transactions")
+summary(basketstrans)
+itemFrequencyPlot(basketstrans, topN=10,  cex.names=1)
+
+# Now run the 'apriori' algorithm
+print("Look at rules with support > .005 & confidence >.1 & length (# artists) <= 4")
+groceryrules = apriori(basketstrans, 
+                     parameter=list(support=.005, confidence=.1, maxlen=4))
+
+#inspect(groceryrules)
+
+## Choose a subset
+#inspect(subset(groceryrules, subset=lift > 5))
+#inspect(subset(groceryrules, subset=confidence > 0.6))
+print('Subset selected with lift >10 and confidence >0.5:')
+inspect(subset(groceryrules, subset=lift > 10 & confidence > 0.5))
+
+# plot all the rules in (support, confidence) space
+# 
+print('we notice that high lift rules tend to have low support')
+plot(groceryrules)
+
+print('Below are the association rules for these shopping baskets')
+# can swap the axes and color scales
+plot(groceryrules, measure = c("support", "lift"), shading = "confidence")
+
+# "two key" plot: coloring is by size (order) of item set
+plot(groceryrules, method='two-key plot')
+
+# can now look at subsets driven by the plot
+inspect(subset(groceryrules, support > 0.035))
+inspect(subset(groceryrules, confidence > 0.6))
+inspect(subset(groceryrules, lift > 20))
+
+
+print('Grocery rules are')
+groceryrules <- apriori(basketstrans, 
+                        parameter=list(support=.005, confidence=.1, maxlen=4))
+
+subrules <- head(groceryrules, n = 10, by = "confidence")
+print('Plotting top 10 rules based on confidence')
+plot(subrules, method = "graph",  engine = "htmlwidget")
+
+print('Below are the association rules for these shopping baskets')
+library(formattable)
+library(ggplot2)
+library(ggiraph)
+library(arules)
+library(tidyverse)
+library(scales)
+library(glue)
+library(shiny)
+#library(ggiraphExtra)
+#Rules plot
+gg_rules <- 
+  groceryrules %>% 
+  arules::sort(by="lift") %>% 
+  DATAFRAME() %>% 
+  as_tibble() %>% 
+  head(10) %>%
+  mutate(ruleName = paste(LHS,"=>",RHS) %>% fct_reorder(lift),
+         support = support %>% percent(),
+         lift = lift %>% round(2)) %>%
+  select(ruleName, support, lift) %>%  
+  ggplot(aes(x=ruleName,y=lift))+
+  geom_segment(aes(xend=ruleName, yend=0), 
+               color="orange",
+               size=1) +
+  geom_point_interactive(aes(tooltip=glue("Support: {support}\nLift: {lift}"), 
+                             data_id=support),
+                         size=3, 
+                         color="lightblue") +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.background = element_rect(fill = "#e0ddd7", color = NA),
+    plot.background = element_rect(fill = "#f5cecb", color = NA)
+  ) +
+  xlab("") +
+  ylab("")
+girafe(ggobj = gg_rules)
+
+```
+
+These are our final association rules for grocery data and these make sense in some instances by how people make their buying decisions.
+
+# \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
